@@ -1,0 +1,20 @@
+name: knx
+description: >-
+  KNX protocol in pure Dart: group and individual addresses, cEMI frames, KNXnet/IP headers,
+  datapoint types and KNX Secure (IP Secure, Data Secure). Runs on the VM, in Flutter and on the web.
+version: 0.2.0
+repository: https://github.com/regetskcob/dart-knx/tree/main/packages/knx
+issue_tracker: https://github.com/regetskcob/dart-knx/issues
+topics: [knx, home-automation, smart-home, iot, protocol]
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  # Only for package:knx/secure.dart (AES, SHA-256, PBKDF2).
+  pointycastle: ^4.0.0
+
+dev_dependencies:
+  test: ^1.25.0
+
+resolution: workspace

@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kberry"
+version = "0.1.0"
+description = "FT1.2 and cEMI for the Weinzierl KNX BAOS 838 kBerry and similar serial KNX modules"
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [{ name = "Kalkar IT Solutions" }]
+requires-python = ">=3.9"
+keywords = ["knx", "kberry", "ft12", "cemi", "baos", "home-automation", "raspberry-pi"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: Home Automation",
+  "Topic :: System :: Hardware",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+serial = ["pyserial>=3.5"]
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/regetskcob/dart-knx/tree/main/python/kberry"
+Issues = "https://github.com/regetskcob/dart-knx/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kberry"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
