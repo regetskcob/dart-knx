@@ -1,0 +1,17 @@
+# Publishes knx or knx_io to pub.dev when a tag <package>-v<version> is pushed.
+# Only for versions after the first one: pub.dev needs the first upload by hand
+# (dart pub publish), then under the package's Admin tab "Automated publishing":
+# enable GitHub Actions, repository regetskcob/dart-knx, tag pattern
+# knx-v{{version}} (resp. knx_io-v{{version}}), environment pub.dev.
+name: publish-pub
+on:
+  push:
+    tags: ["knx-v*", "knx_io-v*"]
+jobs:
+  publish:
+    permissions:
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    with:
+      environment: pub.dev
+      working-directory: packages/${{ startsWith(github.ref_name, 'knx_io-') && 'knx_io' || 'knx' }}

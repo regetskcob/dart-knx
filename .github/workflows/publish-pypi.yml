@@ -1,0 +1,27 @@
+# Publishes python/kberry to PyPI when a tag kberry-v<version> is pushed.
+# Trusted Publishing (OIDC): no token in the repository. One-time setup on
+# pypi.org → Account → Publishing → "Add a new pending publisher":
+# project kberry, owner regetskcob, repository dart-knx,
+# workflow publish-pypi.yml, environment pypi.
+name: publish-pypi
+on:
+  push:
+    tags: ["kberry-v*"]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Version matches the tag
+        run: |
+          v=$(python -c "import tomllib;print(tomllib.load(open('python/kberry/pyproject.toml','rb'))['project']['version'])")
+          test "kberry-v$v" = "$GITHUB_REF_NAME"
+      - run: cd python/kberry && pip install -e '.[test]' && pytest -q
+      - run: pip install build && python -m build python/kberry --outdir dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
