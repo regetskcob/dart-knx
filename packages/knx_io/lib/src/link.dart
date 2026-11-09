@@ -9,7 +9,7 @@ import 'package:knx/secure.dart';
 /// Error of a bus connection. [status] is the KNXnet/IP status code if the
 /// gateway rejected the connection.
 class LinkException implements Exception {
-  const LinkException(this.message, {this.status, String? problem}) : _problem = problem;
+  const LinkException(this.message, {this.status, this._problem});
   final String message;
   final int? status;
   final String? _problem;
@@ -326,8 +326,9 @@ class KnxIpTunnel implements BusLink {
       try {
         final status = await _ack!.future.timeout(const Duration(seconds: 1));
         _sendSeq = (seq + 1) & 0xFF;
-        if (status != KnxIpStatus.ok)
+        if (status != KnxIpStatus.ok) {
           throw LinkException('Gateway rejects the telegram (0x${status.toRadixString(16)})');
+        }
         return;
       } on TimeoutException {
         // retry once

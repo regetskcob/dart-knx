@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Shorter package description (pub.dev limit), analysis with `package:lints/recommended`.
+
 ## 0.2.0
 
 - First public release, BSD 3-Clause.

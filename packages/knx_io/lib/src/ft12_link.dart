@@ -123,8 +123,9 @@ class Ft12CemiLink implements BusLink {
     _session = session;
     try {
       // PEI identify: with cEMI, Weinzierl modules respond with 11 bytes.
-      if (await session.ask(const [0xA7], 0xA8) == null)
+      if (await session.ask(const [0xA7], 0xA8) == null) {
         throw const LinkException('FT1.2 module: no answer to identify');
+      }
       final modes = await session.readProperty(0x0008, 0x40);
       final mask = modes == null || modes.isEmpty ? null : modes.fold<int>(0, (v, b) => (v << 8) | b);
       if (mask != null && mask & (busmonitor ? 0x02 : 0x01) == 0) {
