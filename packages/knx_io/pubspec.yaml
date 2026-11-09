@@ -2,7 +2,7 @@ name: knx_io
 description: >-
   KNX bus connections for Dart behind one interface: KNXnet/IP tunnelling (UDP, TCP, IP Secure),
   routing, and serial FT1.2 with cEMI for the Weinzierl kBerry and similar modules.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/regetskcob/dart-knx/tree/main/packages/knx_io
 issue_tracker: https://github.com/regetskcob/dart-knx/issues
 topics: [knx, home-automation, smart-home, iot, serial]
@@ -19,6 +19,7 @@ dependencies:
   knx: ^0.2.0
 
 dev_dependencies:
+  lints: ^6.0.0
   test: ^1.25.0
 
 resolution: workspace
