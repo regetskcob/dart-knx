@@ -5,7 +5,16 @@ import 'telegram.dart';
 ///
 /// A telegram forwarded by couplers arrives at several tap points: same source, destination, APCI
 /// and payload, a hop count 1 lower per coupler, all within a short [window]. It becomes **one**
-/// telegram ([Telegram.tap] = first sighting, [Telegram.sightings] = the others).
+/// telegram ([Telegram.tap] = the tap point on the sender's line, [Telegram.sightings] = the
+/// others).
+///
+/// The sender's line is the sighting with the highest hop count: each coupler lowers it by one, so
+/// the tap point that saw it unchanged sits on the line it came from. Arrival order does not tell:
+/// interfaces report with different latency (a kBerry over UART some 40 ms after a KNX IP
+/// interface, measured on 10 Nov 2026), so a telegram can reach a tap point behind a coupler
+/// first. With equal hop counts the first sighting wins. The telegram keeps the time of its
+/// earliest sighting, so entries stay in order; the earliest tap point, if it is not the sender's,
+/// becomes a sighting with offset 0.
 ///
 /// Matching is in order: per tap point a telegram joins the oldest open entry with the same content
 /// that this tap point has not contributed to yet. Real installations send identical telegrams in
@@ -63,6 +72,7 @@ class TapMerger {
       if (offset > (w0 > w1 ? w0 : w1) || offset.isNegative) continue;
       e.taps.add(tap);
       e.sightings.add(Sighting(tap, offset, t.hopCount));
+      e.seen[tap] = t;
       return _release(t.time, null);
     }
     _open.add(_Entry(key, t.atTap(tap), tap));
@@ -84,9 +94,33 @@ class TapMerger {
       final due = now != null && !now.isBefore(e.first.time.add(longest));
       if (!(all == true || complete || due)) break;
       _open.removeAt(0);
-      out.add(e.sightings.isEmpty ? e.first : e.first.atTap(e.first.tap, sightings: List.unmodifiable(e.sightings)));
+      out.add(_settle(e));
     }
     return out;
+  }
+
+  /// The merged telegram of [e]: from the tap point with the highest hop count (the sender's
+  /// line), at the time of the earliest sighting.
+  static Telegram _settle(_Entry e) {
+    if (e.sightings.isEmpty) return e.first;
+    var origin = e.first.tap;
+    var hop = e.first.hopCount;
+    for (final s in e.sightings) {
+      if (s.hopCount > hop) {
+        origin = s.tap;
+        hop = s.hopCount;
+      }
+    }
+    if (origin == e.first.tap) return e.first.atTap(origin, sightings: List.unmodifiable(e.sightings));
+    return e.seen[origin]!.atTap(
+      origin,
+      time: e.first.time,
+      sightings: List.unmodifiable([
+        Sighting(e.first.tap, Duration.zero, e.first.hopCount),
+        for (final s in e.sightings)
+          if (s.tap != origin) s,
+      ]),
+    );
   }
 
   static String _keyOf(Telegram t) =>
@@ -99,4 +133,7 @@ class _Entry {
   final Telegram first;
   final Set<int> taps;
   final sightings = <Sighting>[];
+
+  /// The telegram as each further tap point saw it (its own hop count and frame).
+  final seen = <int, Telegram>{};
 }
