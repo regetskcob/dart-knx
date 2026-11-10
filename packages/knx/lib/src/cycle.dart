@@ -27,6 +27,14 @@ const cycleMaxInterval = Duration(hours: 6);
 /// Shortest silence that is reported, however short the interval.
 const cycleMinSilence = Duration(minutes: 15);
 
+/// Shortest time an address must have sent in its own rhythm before it counts
+/// as cyclic, see [cycleSilences].
+const cycleMinCovered = Duration(hours: 1);
+
+/// Time in its own rhythm after which an address counts as cyclic even if it
+/// covers less than half of its history (outages of the recording).
+const cycleEnoughCovered = Duration(days: 2);
+
 /// How long an address with the median [interval] may stay silent.
 Duration cycleLimit(Duration interval) => interval * 3 < cycleMinSilence ? cycleMinSilence : interval * 3;
 
@@ -34,6 +42,13 @@ Duration cycleLimit(Duration interval) => interval * 3 < cycleMinSilence ? cycle
 /// history (median interval at most [cycleMaxInterval], at least
 /// [cycleMinTelegrams] telegrams) but have now been silent for longer than
 /// [cycleLimit].
+///
+/// A short median alone does not make an address cyclic: dimming, blinds and
+/// switching with status feedback send in bursts (a telegram every second
+/// while dimming, then nothing for hours). So the gaps of at most three times
+/// the median, the time the address spent in its own rhythm, must add up to
+/// at least [cycleMinCovered] and to half the time between its first and last
+/// telegram, or to [cycleEnoughCovered].
 ///
 /// [times] maps each group address to the times of the telegrams it sent
 /// (microseconds since epoch, any order; the lists are sorted in place). Read
@@ -48,12 +63,27 @@ List<CycleSilence> cycleSilences(Map<int, List<int>> times, DateTime now) {
     final gaps = [for (var i = 1; i < list.length; i++) list[i] - list[i - 1]]..sort();
     final median = Duration(microseconds: gaps[gaps.length ~/ 2]);
     if (median > cycleMaxInterval || median < const Duration(seconds: 1)) continue;
+    if (!_inRhythm(gaps, median)) continue;
     final silent = Duration(microseconds: nowMicros - list.last);
     if (silent > cycleLimit(median)) {
       result.add(CycleSilence(ga, last: DateTime.fromMicrosecondsSinceEpoch(list.last), interval: median));
     }
   }
   return result;
+}
+
+/// Whether the [gaps] (sorted, µs) show a steady rhythm of [median] rather
+/// than bursts, see [cycleSilences].
+bool _inRhythm(List<int> gaps, Duration median) {
+  final tolerance = median.inMicroseconds * 3;
+  var covered = 0;
+  var span = 0;
+  for (final g in gaps) {
+    span += g;
+    if (g <= tolerance) covered += g;
+  }
+  if (covered < cycleMinCovered.inMicroseconds) return false;
+  return covered * 2 >= span || covered >= cycleEnoughCovered.inMicroseconds;
 }
 
 /// [cycleSilences] over telegrams: only what other devices sent (no read
