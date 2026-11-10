@@ -34,6 +34,41 @@ void main() {
       expect(out.single.taps.toList(), [0, 1]);
     });
 
+    test('the sender\'s line wins over arrival: highest hop count, time of the earliest', () {
+      // Measured 10 Nov 2026: sender on line 1.2, the KNX IP interface behind the coupler (hop 5)
+      // reports some 40 ms before the kBerry on the sender's own line (hop 6).
+      final m = TapMerger(taps: 2);
+      expect(m.add(1, tg(0, hop: 5)), isEmpty);
+      final out = m.add(0, tg(40, hop: 6));
+      expect(out, hasLength(1));
+      expect(out.single.tap, 0);
+      expect(out.single.hopCount, 6);
+      expect(out.single.time, t0, reason: 'order in the history stays');
+      expect(out.single.sightings, [const Sighting(1, Duration.zero, 5)]);
+      expect(out.single.taps.toList(), [0, 1]);
+    });
+
+    test('equal hop counts: the first sighting stays the origin', () {
+      final m = TapMerger(taps: 2);
+      m.add(1, tg(0));
+      final out = m.add(0, tg(2));
+      expect(out.single.tap, 1);
+      expect(out.single.sightings, [const Sighting(0, Duration(milliseconds: 2), 6)]);
+    });
+
+    test('three tap points: origin from the middle, the others keep their offsets', () {
+      final m = TapMerger(taps: 3);
+      m.add(2, tg(0, hop: 4));
+      m.add(1, tg(10, hop: 6));
+      final out = m.add(0, tg(30, hop: 5));
+      expect(out.single.tap, 1);
+      expect(out.single.time, t0);
+      expect(out.single.sightings, [
+        const Sighting(2, Duration.zero, 4),
+        const Sighting(0, Duration(milliseconds: 30), 5),
+      ]);
+    });
+
     test('filtered telegram leaves after the window with one tap point', () {
       final m = TapMerger(taps: 2);
       m.add(1, tg(0));

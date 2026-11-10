@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.3
+
+- `TapMerger`: the merged telegram comes from the tap point on the sender's line, the sighting
+  with the highest hop count, not from the one that reported first. Interfaces report with
+  different latency (a kBerry over UART some 40 ms after a KNX IP interface), so a telegram
+  could reach a tap point behind a coupler first. The time stays that of the earliest sighting;
+  the earliest tap point becomes a sighting with offset 0. Equal hop counts keep the first.
+- `Telegram.atTap` takes an optional `time`.
+
 ## 0.2.2
 
 - `cycleSilences`: addresses that send in bursts (dimming, blinds status while moving,

@@ -99,10 +99,11 @@ class Telegram {
   /// installation, which is also what every telegram without the field means.
   final int tap;
 
-  /// Further tap points that saw the same telegram, in order of arrival. Empty with a single tap point.
+  /// Further tap points that saw the same telegram, in order of arrival. Empty with a single tap
+  /// point. [Sighting.offset] counts from [time], the earliest sighting.
   final List<Sighting> sightings;
 
-  /// All tap points that saw the telegram, the first one first.
+  /// All tap points that saw the telegram, [tap] first.
   Iterable<int> get taps sync* {
     yield tap;
     for (final s in sightings) {
@@ -110,9 +111,10 @@ class Telegram {
     }
   }
 
-  /// The same telegram from tap point [tap] and with [sightings] (merging, see TapMerger).
-  Telegram atTap(int tap, {List<Sighting> sightings = const []}) => Telegram(
-    time: time,
+  /// The same telegram from tap point [tap] and with [sightings] (merging, see TapMerger), at
+  /// [time] if given.
+  Telegram atTap(int tap, {List<Sighting> sightings = const [], DateTime? time}) => Telegram(
+    time: time ?? this.time,
     source: source,
     destination: destination,
     type: type,
