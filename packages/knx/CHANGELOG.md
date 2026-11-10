@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2
+
+- `cycleSilences`: addresses that send in bursts (dimming, blinds status while moving,
+  switching with feedback) no longer count as cyclic. An address must have sent in its own
+  rhythm for at least an hour and for half its history (or two days in all), see
+  `cycleMinCovered` and `cycleEnoughCovered`.
+
 ## 0.2.1
 
 - Shorter package description (pub.dev limit), analysis with `package:lints/recommended`.
